@@ -1,2 +1,2 @@
-# streamlit_practice
+# streamlit Practice
 Streamlit Practice Apps
