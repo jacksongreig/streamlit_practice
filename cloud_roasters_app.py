@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date 
 import snowflake.connector
 
-# Helper function to get a Snowflake connection
+# function to get a Snowflake connection
 def get_connection():
     return snowflake.connector.connect(
         user=st.secrets["snowflake"]["user"],
@@ -13,7 +13,7 @@ def get_connection():
         schema=st.secrets["snowflake"]["schema"]
     )
 
-# Create table if it doesn't already exist
+# create table if it doesn't already exist
 def initialize_table():
     create_query = """
         CREATE TABLE IF NOT EXISTS ROASTING_REPORTS (
@@ -33,13 +33,13 @@ def initialize_table():
             "Roast Notes" VARCHAR(500)
         );
     """
-    # Use context managers to automatically close the connection and cursor
+    # automatically close the connection and cursor
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(create_query)
             conn.commit()
 
-# Insert a record into the Snowflake table
+# insert record into the Snowflake table
 def insert_record(record):
     insert_query = """
         INSERT INTO ROASTING_REPORTS 
@@ -68,15 +68,15 @@ def insert_record(record):
             ))
             conn.commit()
 
-# Initialize session state for batch ID if not already set
+# initialise session state for batch ID
 if "batch_id" not in st.session_state:
     st.session_state.batch_id = 1
 
 def main():
-    # Create the table if it doesn't exist
+    # create the table if it doesn't exist
     initialize_table()
 
-    # Apply custom CSS to change the app's background and form styling
+    # change the app's background and form styling
     st.markdown(
         """
         <style>
@@ -96,10 +96,10 @@ def main():
         unsafe_allow_html=True
     )
     
-    # Display the logo image
+    # display the cloud roasters logo
     st.image("logo.png", use_container_width=True)
 
-    # Create a form for the roasting report
+    # create form
     with st.form("roasting_form"):
         st.markdown("<h3 style='text-align: center;'>Roasting Report Form</h3>", unsafe_allow_html=True)
         st.markdown(f"Batch ID: {st.session_state.batch_id}", unsafe_allow_html=True)
@@ -110,7 +110,7 @@ def main():
         ]
         selected_store = st.selectbox("Select Roastery Location:", store_list, key="selected_store")
         roast_date = st.date_input("Roast Date:", value=st.session_state.get("roast_date", date.today()), key="roast_date")
-        formatted_date = roast_date.strftime('%Y-%m-%d')  # Format the date
+        formatted_date = roast_date.strftime('%Y-%m-%d')
 
         bean_code = st.text_input("Bean Name:", placeholder="Enter bean name or code", key="bean_code")
 
@@ -152,7 +152,7 @@ def main():
 
         submitted = st.form_submit_button("Submit")
 
-        # Validate the form data when submitted
+        # validate the form when submitted
         if submitted:
             errors = []
             if not bean_code.strip():
@@ -172,10 +172,10 @@ def main():
                 for error in errors:
                     st.error(error)
             else:
-                # Calculate weight loss percentage
+                # calculate weight loss percentage
                 weight_loss = round(((green_weight - roasted_weight) / green_weight) * 100, 2) if green_weight else 0
 
-                # Build the record dictionary from form data
+                # build the record dictionary
                 new_record = {
                     "Batch ID": st.session_state.batch_id,
                     "Roastery": selected_store,
@@ -199,13 +199,13 @@ def main():
                 )
                 
                 try:
-                    # Insert the new record into Snowflake
+                    # insert new record into Snowflake
                     insert_record(new_record)
                     st.info("Roasting Report successfully imported into database.")
                 except Exception as e:
                     st.error(f"Error inserting record into Snowflake: {e}")
 
-                # Increment batch ID for the next submission
+                # increment batch ID
                 st.session_state.batch_id += 1
 
 if __name__ == "__main__":
