@@ -4,9 +4,6 @@ import snowflake.connector
 
 # Helper function to get a Snowflake connection
 def get_connection():
-    if "snowflake" not in st.secrets:
-        st.error('Snowflake secrets not found. Please add them to your secrets.toml file or Streamlit Cloud settings.')
-        return None
     return snowflake.connector.connect(
         user=st.secrets["snowflake"]["user"],
         password=st.secrets["snowflake"]["password"],
@@ -36,12 +33,11 @@ def initialize_table():
             "Roast Notes" VARCHAR(500)
         );
     """
-    conn = get_connection()
-    if conn:
+    # Use context managers to automatically close the connection and cursor
+    with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(create_query)
             conn.commit()
-        conn.close()
 
 # Insert a record into the Snowflake table
 def insert_record(record):
@@ -52,8 +48,7 @@ def insert_record(record):
          "Roasted Weight (kg)", "Weight Loss (%%)", "Roast Notes")
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    conn = get_connection()
-    if conn:
+    with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(insert_query, (
                 record["Batch ID"],
@@ -61,18 +56,17 @@ def insert_record(record):
                 record["Roastery"],
                 record["Bean Code"],
                 record["Origin"],
-                record["Moisture Content (%%)"],
+                record["Moisture Content (%)"],
                 record["Roast Level"],
                 record["Roast Duration (mins)"],
                 record["First Crack Time (mins)"],
                 record["Development Time (mins)"],
                 record["Green Bean Weight (kg)"],
                 record["Roasted Weight (kg)"],
-                record["Weight Loss (%%)"],
+                record["Weight Loss (%)"],
                 record["Roast Notes"]
             ))
             conn.commit()
-        conn.close()
 
 # Initialize session state for batch ID if not already set
 if "batch_id" not in st.session_state:
@@ -181,21 +175,21 @@ def main():
                 # Calculate weight loss percentage
                 weight_loss = round(((green_weight - roasted_weight) / green_weight) * 100, 2) if green_weight else 0
 
-                # Build the record dictionary from form data with keys matching the table definition
+                # Build the record dictionary from form data
                 new_record = {
                     "Batch ID": st.session_state.batch_id,
                     "Roastery": selected_store,
                     "Roast Date": formatted_date,
                     "Bean Code": bean_code,
                     "Origin": bean_origin,
-                    "Moisture Content (%%)": moisture_content,
+                    "Moisture Content (%)": moisture_content,
                     "Roast Level": roast_type,
                     "Roast Duration (mins)": roast_duration,
                     "First Crack Time (mins)": first_crack_time,
                     "Development Time (mins)": development_time,
                     "Green Bean Weight (kg)": green_weight,
                     "Roasted Weight (kg)": roasted_weight,
-                    "Weight Loss (%%)": weight_loss,
+                    "Weight Loss (%)": weight_loss,
                     "Roast Notes": roast_notes
                 }
 
