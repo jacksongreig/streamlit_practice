@@ -1,98 +1,82 @@
-import streamlit as st  
+import streamlit as st
 from datetime import date 
 import snowflake.connector
 
-# create table if it doesn't already exist
+# Helper function to get a Snowflake connection
+def get_connection():
+    return snowflake.connector.connect(
+        user=st.secrets["snowflake"]["user"],
+        password=st.secrets["snowflake"]["password"],
+        account=st.secrets["snowflake"]["account"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"]
+    )
+
+# Create table if it doesn't already exist
 def initialize_table():
-    # Connect to Snowflake (creds in secrets.toml)
-    conn = snowflake.connector.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"]
-    )
-    cursor = conn.cursor()
-    try:
-        # SQL command to create the table with the necessary columns
-        create_query = """
-            CREATE TABLE IF NOT EXISTS ROASTING_REPORTS (
-                "Batch ID" INTEGER PRIMARY KEY,
-                "Roastery" VARCHAR(255),
-                "Roast Date" DATE,
-                "Bean Code" VARCHAR(255),
-                "Origin" VARCHAR(255),
-                "Moisture Content (%%)" NUMBER(5,2),
-                "Roast Level" VARCHAR(50),
-                "Roast Duration (mins)" INTEGER,
-                "First Crack Time (mins)" INTEGER,
-                "Development Time (mins)" INTEGER,
-                "Green Bean Weight (kg)" NUMBER(10,2),
-                "Roasted Weight (kg)" NUMBER(10,2),
-                "Weight Loss (%%)" NUMBER(5,2),
-                "Roast Notes" VARCHAR(500)
-            );
-        """
-        # Commit the table creation and close the cursor and connection
-        cursor.execute(create_query)
-        conn.commit()  
-    finally:
-        cursor.close()
-        conn.close()
+    create_query = """
+        CREATE TABLE IF NOT EXISTS ROASTING_REPORTS (
+            "Batch ID" INTEGER PRIMARY KEY,
+            "Roastery" VARCHAR(255),
+            "Roast Date" DATE,
+            "Bean Code" VARCHAR(255),
+            "Origin" VARCHAR(255),
+            "Moisture Content (%%)" NUMBER(5,2),
+            "Roast Level" VARCHAR(50),
+            "Roast Duration (mins)" INTEGER,
+            "First Crack Time (mins)" INTEGER,
+            "Development Time (mins)" INTEGER,
+            "Green Bean Weight (kg)" NUMBER(10,2),
+            "Roasted Weight (kg)" NUMBER(10,2),
+            "Weight Loss (%%)" NUMBER(5,2),
+            "Roast Notes" VARCHAR(500)
+        );
+    """
+    # Use context managers to automatically close the connection and cursor
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(create_query)
+            conn.commit()
 
-# Function to insert a record into the Snowflake table
+# Insert a record into the Snowflake table
 def insert_record(record):
-    # Connect to Snowflake (creds in secrets.toml)
-    conn = snowflake.connector.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"]
-    )
-    cursor = conn.cursor()
-    try:
-        # SQL INSERT command with placeholders for parameterized query
-        insert_query = """
-            INSERT INTO ROASTING_REPORTS 
-            ("Batch ID", "Roast Date", "Roastery", "Bean Code", "Origin", "Moisture Content (%%)", "Roast Level", 
-             "Roast Duration (mins)", "First Crack Time (mins)", "Development Time (mins)", "Green Bean Weight (kg)", 
-             "Roasted Weight (kg)", "Weight Loss (%%)", "Roast Notes")
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        # Execute the query using the values from the record dictionary
-        cursor.execute(insert_query, (
-            record["Batch ID"],
-            record["Roast Date"],
-            record["Roastery"],
-            record["Bean Code"],
-            record["Origin"],
-            record["Moisture Content (%)"],
-            record["Roast Level"],
-            record["Roast Duration (mins)"],
-            record["First Crack Time (mins)"],
-            record["Development Time (mins)"],
-            record["Green Bean Weight (kg)"],
-            record["Roasted Weight (kg)"],
-            record["Weight Loss (%)"],
-            record["Roast Notes"]
-        ))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+    insert_query = """
+        INSERT INTO ROASTING_REPORTS 
+        ("Batch ID", "Roast Date", "Roastery", "Bean Code", "Origin", "Moisture Content (%%)", "Roast Level", 
+         "Roast Duration (mins)", "First Crack Time (mins)", "Development Time (mins)", "Green Bean Weight (kg)", 
+         "Roasted Weight (kg)", "Weight Loss (%%)", "Roast Notes")
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(insert_query, (
+                record["Batch ID"],
+                record["Roast Date"],
+                record["Roastery"],
+                record["Bean Code"],
+                record["Origin"],
+                record["Moisture Content (%)"],
+                record["Roast Level"],
+                record["Roast Duration (mins)"],
+                record["First Crack Time (mins)"],
+                record["Development Time (mins)"],
+                record["Green Bean Weight (kg)"],
+                record["Roasted Weight (kg)"],
+                record["Weight Loss (%)"],
+                record["Roast Notes"]
+            ))
+            conn.commit()
 
-# Initialize a session state variable for the batch ID if it hasn't been set already
+# Initialize session state for batch ID if not already set
 if "batch_id" not in st.session_state:
     st.session_state.batch_id = 1
 
 def main():
-    # Ensure the table exists by calling the initialization function
+    # Create the table if it doesn't exist
     initialize_table()
 
-    # To change background colour and form colour of app
+    # Apply custom CSS to change the app's background and form styling
     st.markdown(
         """
         <style>
@@ -112,11 +96,11 @@ def main():
         unsafe_allow_html=True
     )
     
+    # Display the logo image
     st.image("logo.png", use_container_width=True)
 
-    # Create a form
+    # Create a form for the roasting report
     with st.form("roasting_form"):
-
         st.markdown("<h3 style='text-align: center;'>Roasting Report Form</h3>", unsafe_allow_html=True)
         st.markdown(f"Batch ID: {st.session_state.batch_id}", unsafe_allow_html=True)
 
@@ -124,11 +108,9 @@ def main():
             "Martin Place Store", "Bondi Store", "Coogee Store",
             "Paddington Store", "Surry Hills Store", "Bronte Store", "Newtown Store"
         ]
-
         selected_store = st.selectbox("Select Roastery Location:", store_list, key="selected_store")
-
         roast_date = st.date_input("Roast Date:", value=st.session_state.get("roast_date", date.today()), key="roast_date")
-        formatted_date = roast_date.strftime('%Y-%m-%d')  # Format the date for display and storage
+        formatted_date = roast_date.strftime('%Y-%m-%d')  # Format the date
 
         bean_code = st.text_input("Bean Name:", placeholder="Enter bean name or code", key="bean_code")
 
@@ -138,16 +120,13 @@ def main():
             "Yemen", "Uganda", "China", "Thailand", "Philippines", "Zambia", "Malawi", "Dominican Republic", "Haiti",
             "Venezuela", "Cameroon", "Bolivia", "Laos", "Nepal", "Cuba", "Ivory Coast", "Sri Lanka", "Timor-Leste"
         ]
-
         bean_origin = st.selectbox("Bean Origin:", country_list, key="bean_origin")
 
         moisture_content = st.number_input(
             "Moisture Content (%):", min_value=0.0, max_value=100.0,
             value=st.session_state.get("moisture_content", 15.0), step=0.5, key="moisture_content"
         )
-
         roast_type = st.selectbox("Roast Level:", ["Light", "Medium", "Medium-Dark", "Dark"], key="roast_type")
-
         roast_duration = st.number_input(
             "Roast Duration (minutes):", min_value=0, max_value=120,
             value=st.session_state.get("roast_duration", 40), step=5, format="%d", key="roast_duration"
@@ -160,7 +139,6 @@ def main():
             "Development Time (minutes):", min_value=0, max_value=120,
             value=st.session_state.get("development_time", 30), step=5, format="%d", key="development_time"
         )
-
         green_weight = st.number_input(
             "Green Bean Weight (kg):", min_value=0.0, max_value=200.0,
             value=st.session_state.get("green_weight", 20.0), step=0.5, key="green_weight"
@@ -170,13 +148,11 @@ def main():
             value=st.session_state.get("roasted_weight", 20.0), step=0.5, key="roasted_weight"
         )
 
-        # Optional text area for additional roast notes or comments
         roast_notes = st.text_area("Notes / Comments:", key="roast_notes", height=68, max_chars=200, placeholder="Optional")
 
-        # Submit button for the form
         submitted = st.form_submit_button("Submit")
 
-        # When the form is submitted, validate inputs and process the data
+        # Validate the form data when submitted
         if submitted:
             errors = []
             if not bean_code.strip():
@@ -192,15 +168,14 @@ def main():
             if roasted_weight <= 0:
                 errors.append("Final Roasted Weight must be greater than 0.")
 
-            # Display any errors encountered during validation
             if errors:
                 for error in errors:
                     st.error(error)
             else:
-                # Calculate the weight loss percentage from the provided weights
+                # Calculate weight loss percentage
                 weight_loss = round(((green_weight - roasted_weight) / green_weight) * 100, 2) if green_weight else 0
 
-                # Build a dictionary containing all form data to represent the new record
+                # Build the record dictionary from form data
                 new_record = {
                     "Batch ID": st.session_state.batch_id,
                     "Roastery": selected_store,
@@ -218,22 +193,20 @@ def main():
                     "Roast Notes": roast_notes
                 }
 
-                # Show a success message with details of the submission
                 st.success(
                     f"Roasting data submitted for {bean_code} (Batch #{st.session_state.batch_id}) "
                     f"on {formatted_date} at {selected_store}."
                 )
                 
-                # Attempt to insert the new record into Snowflake and display status info
                 try:
+                    # Insert the new record into Snowflake
                     insert_record(new_record)
-                    st.info("Record successfully inserted into Snowflake.")
+                    st.info("Roasting Report successfully imported into database.")
                 except Exception as e:
                     st.error(f"Error inserting record into Snowflake: {e}")
 
-                # Increment the batch ID in session state for the next submission
+                # Increment batch ID for the next submission
                 st.session_state.batch_id += 1
 
-# Run the main function if this script is executed
 if __name__ == "__main__":
     main()
