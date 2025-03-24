@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import date, datetime
 import pytz
+import time
 import snowflake.connector
 
 def get_connection():
@@ -199,7 +200,9 @@ def main():
                         f"Roasting data submitted for {bean_code} (Batch #{batch_id}) on {roast_date} at {selected_store}."
                     )
                     st.info("Roasting Report successfully imported into database.")
-                    st.rerun()
+                    with st.empty():
+                        time.sleep(2)
+                        st.rerun()
                 except Exception as exp:
                     st.error(f"Error inserting record into Snowflake: {exp}")
 
