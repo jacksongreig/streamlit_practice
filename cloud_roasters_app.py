@@ -95,7 +95,7 @@ def main():
     )
     st.image("logo.png", use_container_width=True)
 
-    with st.form("roasting_form"):
+    with st.form("roasting_form", clear_on_submit=True, enter_to_submit=False):
         batch_id = get_next_batch_id_from_table()
         st.markdown("<h3 style='text-align: center;'>Roasting Report Form</h3>", unsafe_allow_html=True)
         st.markdown(f"Batch ID: {batch_id}", unsafe_allow_html=True)
@@ -199,6 +199,7 @@ def main():
                         f"Roasting data submitted for {bean_code} (Batch #{batch_id}) on {roast_date} at {selected_store}."
                     )
                     st.info("Roasting Report successfully imported into database.")
+                    st.rerun()
                 except Exception as exp:
                     st.error(f"Error inserting record into Snowflake: {exp}")
 
