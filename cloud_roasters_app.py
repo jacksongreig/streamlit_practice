@@ -4,6 +4,8 @@ import pytz
 import time
 import snowflake.connector
 
+st.set_page_config(page_title="Cloud Roasters - RRF", page_icon="☁️", layout="centered", initial_sidebar_state="auto", menu_items=None)
+
 def get_connection():
     return snowflake.connector.connect(
         user=st.secrets["snowflake"]["user"],
