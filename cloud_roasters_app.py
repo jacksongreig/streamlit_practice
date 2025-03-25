@@ -126,27 +126,27 @@ def main():
         roast_type = st.selectbox("Roast Level:", ["Light", "Medium", "Medium-Dark", "Dark"], key="roast_type")
         roast_duration = st.number_input(
             "Roast Duration (minutes):", 
-            min_value=0, max_value=120,
-            value=40, step=5, format="%d", key="roast_duration"
+            min_value=0, max_value=60,
+            value=30, step=5, format="%d", key="roast_duration"
         )
         first_crack_time = st.number_input(
             "First Crack Time (minutes):", 
-            min_value=0, max_value=120,
-            value=30, step=5, format="%d", key="first_crack_time"
+            min_value=0, max_value=60,
+            value=20, step=5, format="%d", key="first_crack_time"
         )
         development_time = st.number_input(
             "Development Time (minutes):", 
-            min_value=0, max_value=120,
-            value=30, step=5, format="%d", key="development_time"
+            min_value=0, max_value=60,
+            value=20, step=5, format="%d", key="development_time"
         )
         green_weight = st.number_input(
             "Green Bean Weight (kg):", 
-            min_value=0.0, max_value=200.0,
+            min_value=0.0, max_value=100.0,
             value=20.0, step=0.5, key="green_weight"
         )
         roasted_weight = st.number_input(
             "Final Roasted Weight (kg):", 
-            min_value=0.0, max_value=200.0,
+            min_value=0.0, max_value=100.0,
             value=20.0, step=0.5, key="roasted_weight"
         )
         roast_notes = st.text_area("Notes / Comments:", key="roast_notes", height=68, max_chars=200, placeholder="Optional")
