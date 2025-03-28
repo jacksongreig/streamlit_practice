@@ -1,4 +1,4 @@
-import streamlit as st # type: ignore
+import streamlit as st
 from datetime import date, datetime
 import pytz
 import time
