@@ -95,7 +95,7 @@ def ask_llm(question):
         return response.json()["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
-        st.error(f"❌ Mistral API error: {e}")
+        st.error(f"Mistral API error: {e}")
         return ""
 
 # ========== Snowflake Connection ==========
@@ -111,7 +111,7 @@ def connect_to_snowflake():
             role=st.secrets["snowflake"]["role"]
         )
     except Exception as e:
-        st.error(f"❌ Snowflake connection failed: {e}")
+        st.error(f"Snowflake connection failed: {e}")
         return None
 
 # ========== Run SQL Query ==========
@@ -121,14 +121,14 @@ def run_query(query, conn):
             cur.execute(query)
             rows = cur.fetchall()
             if not rows:
-                st.success("✅ Query executed successfully!")
-                st.warning("⚠️ But it returned no results.")
+                st.success("Query executed successfully!")
+                st.warning("But it returned no results.")
                 return pd.DataFrame()
             columns = [desc[0] for desc in cur.description]
-            st.success("✅ Query executed successfully!")
+            st.success("Query executed successfully!")
             return pd.DataFrame(rows, columns=columns)
     except Exception as e:
-        st.error(f"❌ SQL execution error:\n\n{e}")
+        st.error(f"SQL execution error:\n\n{e}")
         return None
 
 # ========== Streamlit UI ==========
@@ -154,7 +154,7 @@ with st.form("llm_roaster_form", clear_on_submit=True):
 
             # Check if LLM response is SQL
             if re.match(r"(?i)^(SELECT|WITH|INSERT|UPDATE|DELETE)", response.strip()):
-                with st.spinner("🔍 Running SQL..."):
+                with st.spinner("Running SQL..."):
                     conn = connect_to_snowflake()
                     if conn:
                         df = run_query(response, conn)
@@ -163,7 +163,7 @@ with st.form("llm_roaster_form", clear_on_submit=True):
                             if not df.empty:
                                 st.dataframe(df, use_container_width=True)
             else:
-                st.success("✅ Answer from your coffee assistant:")
+                st.success("Answer from your coffee assistant:")
                 st.markdown(response)
 
 st.markdown('</div>', unsafe_allow_html=True)
