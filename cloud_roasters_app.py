@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date, datetime
 import pytz
 import time
-import snowflake.connector  # type: ignore
+import snowflake.connector
 
 st.set_page_config(
     page_title="Cloud Roasters - RRF", 
