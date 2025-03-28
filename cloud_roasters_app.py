@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date, datetime
 import pytz
 import time
-import snowflake.connector
+import snowflake.connector  # type: ignore
 
 st.set_page_config(
     page_title="Cloud Roasters - RRF", 
@@ -209,7 +209,7 @@ def main():
                     )
                     st.info("Roasting Report successfully imported into database.")
                     with st.empty():
-                        time.sleep(2)
+                        time.sleep(1)
                         st.rerun()
                 except Exception as exp:
                     st.error(f"Error inserting record into Snowflake: {exp}")
