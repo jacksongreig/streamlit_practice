@@ -1,14 +1,14 @@
-import streamlit as st
+import streamlit as st # type: ignore
 from datetime import date, datetime
 import pytz
 import time
 import snowflake.connector
 
 st.set_page_config(
-    page_title="Cloud Roasters - RRF", 
+    page_title="Cloud Roasters | RRF", 
     page_icon="☁️", 
     layout="centered", 
-    initial_sidebar_state="auto", 
+    initial_sidebar_state="collapsed", 
     menu_items=None
     )
 
